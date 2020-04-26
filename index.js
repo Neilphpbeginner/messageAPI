@@ -22,6 +22,9 @@ mongoose.connect(process.env.CONNECTION_TO_DB, { useUnifiedTopology: true, useNe
 
 app.use(bodyParser.json())
 app.use(cors());
+app.get('/', (req, res) => {
+    res.send("Server Running")
+})
 app.use('/api', router)
 
 // Starting Server
