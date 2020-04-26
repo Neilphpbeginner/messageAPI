@@ -18,12 +18,13 @@ mongoose.connect(process.env.CONNECTION_TO_DB, { useUnifiedTopology: true, useNe
     console.log(error)
 })
 
-// Emable middleware
+// Enable middleware
 
 app.use(bodyParser.json())
 app.use(cors());
-
 app.use('/api', router)
+
+// Starting Server
 
 app.listen(3000, () => {
     console.log("Server up and running")
