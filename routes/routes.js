@@ -22,7 +22,7 @@ router.get('/findMessageBySubject', (req, res, next) => {
     })
 })
 
-router.put('/updateSubject/byId', (req, res, next) => {
+router.put('/updateSubjectById', (req, res, next) => {
     messagesModel.findByIdAndUpdate({ _id: req.body._id }, { subject: req.body.subject }, (error, data) => {
         if (error) {
             res.send(error)
@@ -52,7 +52,7 @@ router.delete('/deleteMessageById', (req, res, next) => {
     })
 })
 
-router.put('/updateMessage/byId', (req, res, next) => {
+router.put('/updateMessageById', (req, res, next) => {
     messagesModel.findByIdAndUpdate({ _id: req.body._id }, { message: req.body.message }, (error, data) => {
         if (error) {
             res.send(error)
