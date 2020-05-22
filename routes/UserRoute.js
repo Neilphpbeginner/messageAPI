@@ -2,7 +2,11 @@ const router = require('express').Router();
 const mongoose = require('mongoose');
 const UserModel = require('../userSchema/UserSchema');
 const bcrypt = require('bcrypt');
+const passport = require('passport'),
+    LocalStrategy = require('passport-local').Strategy
 const jwt = require('jsonwebtoken')
+
+
 
 router.post('/register', async (req, res) => {
     const hash = bcrypt.hashSync(req.body.password, 10)
@@ -25,23 +29,34 @@ router.post('/register', async (req, res) => {
     }
 });
 
-router.post('/login', async (req, res, next) => {
-    const userLogin = await UserModel.findOne({ email: req.body.email }).exec();
-    if (userLogin) {
-        const passwordCheck = await bcrypt.compare(req.body.password, userLogin.password, (error, result) => {
-            if (!result) {
-                res.status(404).send("Incorrect Password")
-            } else {
-                const token = jwt.sign({ data: userLogin.user_id }, process.env.SECRET, {
-                    expiresIn: '10m',
-                    algorithm: 'HS256',
-                })
-                res.header('auth-token', token).send(token)
-            }
-        })
-    } else {
-        res.status(404).send("User not registered")
-    }
+router.post('/login', passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login',
+    failureFlash: true,
+    successFlash: true,
+    session: true
+}), (req, res) => {
+
+
+    res.send("Passed")
+
+
+    // const userLogin = await UserModel.findOne({ email: req.body.email }).exec();
+    // if (userLogin) {
+    //     const passwordCheck = await bcrypt.compare(req.body.password, userLogin.password, (error, result) => {
+    //         if (!result) {
+    //             res.status(404).send("Incorrect Password")
+    //         } else {
+    //             const token = jwt.sign({ data: userLogin.user_id }, process.env.SECRET, {
+    //                 expiresIn: '10m',
+    //                 algorithm: 'HS256',
+    //             })
+    //             res.header('auth-token', token).send(token)
+    //         }
+    //     })
+    // } else {
+    //     res.status(404).send("User not registered")
+    // }
 
 })
 module.exports = router;
