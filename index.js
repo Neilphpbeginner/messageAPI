@@ -33,7 +33,11 @@ const connection = mongoose.connect(process.env.CONNECTION_TO_DB, {
 // Enable middleware
 
 app.use(bodyParser.json())
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:3001", // allow to server to accept request from different origin
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true // allow session cookie from browser to pass through
+}));
 app.use(flash())
 app.use(session({ secret: "cat", resave: false, saveUninitialized: true, cookie: { secure: true } }))
 app.use(passport.initialize())
@@ -41,7 +45,7 @@ app.use(passport.session())
 
 // Initiating Routes
 
-app.use('/api/messages', authMiddleware, MessageRouter)
+app.use('/api/messages', MessageRouter)
 app.use('/api/users/', UserRouter)
 
 // Starting Server

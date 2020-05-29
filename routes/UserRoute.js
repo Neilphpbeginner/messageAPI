@@ -2,16 +2,16 @@ const router = require('express').Router();
 const mongoose = require('mongoose');
 const UserModel = require('../userSchema/UserSchema');
 const bcrypt = require('bcrypt');
-const passport = require('passport'),
-    LocalStrategy = require('passport-local').Strategy
+const passport = require('passport')
 const jwt = require('jsonwebtoken')
-
-
 
 router.post('/register', async (req, res) => {
     const hash = bcrypt.hashSync(req.body.password, 10)
     const newUser = new UserModel({
-        username: req.body.username,
+        first_name: req.body.given_name,
+        last_name: req.body.family_name,
+        profile_pic: req.body.picture,
+        googleID: req.body.sub,
         email: req.body.email,
         password: hash
     });
@@ -30,33 +30,54 @@ router.post('/register', async (req, res) => {
 });
 
 router.post('/login', passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login',
     failureFlash: true,
     successFlash: true,
     session: true
 }), (req, res) => {
-
-
-    res.send("Passed")
-
-
-    // const userLogin = await UserModel.findOne({ email: req.body.email }).exec();
-    // if (userLogin) {
-    //     const passwordCheck = await bcrypt.compare(req.body.password, userLogin.password, (error, result) => {
-    //         if (!result) {
-    //             res.status(404).send("Incorrect Password")
-    //         } else {
-    //             const token = jwt.sign({ data: userLogin.user_id }, process.env.SECRET, {
-    //                 expiresIn: '10m',
-    //                 algorithm: 'HS256',
-    //             })
-    //             res.header('auth-token', token).send(token)
-    //         }
-    //     })
-    // } else {
-    //     res.status(404).send("User not registered")
-    // }
-
+    res.json({
+        sessionId: req.sessionID,
+    })
 })
+
+router.get('/auth/google',
+    passport.authenticate('google', { scope: ["profile", "email"] }));
+
+router.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/' }),
+    (req, res) => {
+        const googleUser = req.user._json
+        UserModel.findOne({ email: googleUser.email }, async (error, user) => {
+            if (error) {
+                res.send(error)
+            }
+            if (user) {
+                res.json({
+                    sessionId: req.sessionID,
+                })
+            } else {
+                const newUser = new UserModel({
+                    first_name: googleUser.given_name,
+                    last_name: googleUser.family_name,
+                    profile_pic: googleUser.picture,
+                    googleID: googleUser.sub,
+                    email: googleUser.email
+                })
+
+                try {
+                    const googleuser = await newUser.save((error) => {
+                        if (error) {
+                            res.send("Google user could not be created")
+                        } else {
+                            res.json({
+                                sessionId: req.sessionID,
+                            })
+                        }
+                    })
+                } catch (error) {
+                    res.send(error)
+                }
+            }
+        })
+    });
+
 module.exports = router;

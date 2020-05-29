@@ -3,6 +3,9 @@ const passport = require('passport'),
 const GoogleStrategy = require('passport-google-oauth20')
 const UserModel = require('../userSchema/UserSchema');
 const bcrypt = require('bcrypt');
+const dotenv = require('dotenv')
+
+dotenv.config()
 
 passport.serializeUser((user, done) => {
     done(null, user.id)
@@ -14,7 +17,7 @@ passport.deserializeUser((id, done) => {
     })
 })
 
-passport.use('local', new LocalStrategy(
+passport.use(new LocalStrategy(
     {
         usernameField: "email",
         passwordField: "password"
@@ -27,7 +30,7 @@ passport.use('local', new LocalStrategy(
             if (!user) {
                 return done(null, false, { message: "Incorrect Username" })
             }
-            if (!bcrypt.compareSync(password, user.password, (error => { if (error) { console.log("test") } }))) {
+            if (!bcrypt.compareSync(password, user.password, (error => { if (error) { console.log() } }))) {
                 return done(null, false, { message: "Incorrect Password" })
             }
             return done(null, user)
@@ -35,17 +38,16 @@ passport.use('local', new LocalStrategy(
     }
 ))
 
-// passport.use('google', new GoogleStrategy(
-//     {
-//         clientID: process.env.GOOGLE_CLIENT_ID,
-//         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-//     },
-//     (accessToken, refreshToken, profile, cd) => {
-//         UserModel.findOne({ googleId: profile.id }, (error, user) => {
-//             return cd(error, user)
-//         })
-//     }
-// ))
+passport.use(new GoogleStrategy(
+    {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: "http://localhost:3000/api/users/auth/google/callback",
+    },
+    (accessToken, refreshToken, profile, done) => {
+        done(null, profile)
+    }
+))
 
 
 
